@@ -1,0 +1,197 @@
+---
+// Full-screen photo viewer. Progressive enhancement: every thumbnail is a
+// plain link to the full-size image, and this script upgrades those links
+// (a[data-lightbox]) into a <dialog> with keyboard, button and swipe navigation.
+import Icon from './Icon.astro';
+---
+
+<dialog class="lightbox" aria-label="Photo viewer">
+  <div class="lb-stage">
+    <img class="lb-img" alt="" />
+  </div>
+  <div class="lb-bar">
+    <p class="lb-caption small"></p>
+    <span class="lb-count mono"></span>
+  </div>
+  <button class="lb-btn lb-close" type="button" aria-label="Close"><Icon name="x" size={28} /></button>
+  <button class="lb-btn lb-prev" type="button" aria-label="Previous photo"><Icon name="chevron-left" size={32} /></button>
+  <button class="lb-btn lb-next" type="button" aria-label="Next photo"><Icon name="chevron-right" size={32} /></button>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('dialog.lightbox');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[data-lightbox]'));
+
+  if (dialog && links.length && typeof dialog.showModal === 'function') {
+    const img = dialog.querySelector<HTMLImageElement>('.lb-img')!;
+    const caption = dialog.querySelector<HTMLElement>('.lb-caption')!;
+    const count = dialog.querySelector<HTMLElement>('.lb-count')!;
+    let index = 0;
+    let opener: HTMLElement | null = null;
+
+    const preload = (i: number) => {
+      const a = links[(i + links.length) % links.length];
+      const pre = new Image();
+      pre.sizes = '100vw';
+      pre.srcset = a.dataset.srcset ?? '';
+      pre.src = a.href;
+    };
+
+    const show = (i: number) => {
+      index = (i + links.length) % links.length;
+      const a = links[index];
+      img.removeAttribute('srcset');
+      img.src = a.href;
+      img.srcset = a.dataset.srcset ?? '';
+      img.sizes = '100vw';
+      img.alt = a.dataset.alt ?? '';
+      caption.textContent = a.dataset.caption ?? '';
+      count.textContent = `${index + 1} / ${links.length}`;
+      preload(index + 1);
+      preload(index - 1);
+    };
+
+    links.forEach((a, i) =>
+      a.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // allow "open in new tab"
+        e.preventDefault();
+        opener = a;
+        show(i);
+        dialog.showModal();
+        document.documentElement.style.overflow = 'hidden';
+      }),
+    );
+
+    dialog.addEventListener('close', () => {
+      document.documentElement.style.overflow = '';
+      opener?.focus();
+    });
+    dialog.querySelector('.lb-close')!.addEventListener('click', () => dialog.close());
+    dialog.querySelector('.lb-prev')!.addEventListener('click', () => show(index - 1));
+    dialog.querySelector('.lb-next')!.addEventListener('click', () => show(index + 1));
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(index - 1);
+      if (e.key === 'ArrowRight') show(index + 1);
+    });
+    // Click on the dark backdrop (not the photo or controls) closes.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog || (e.target as HTMLElement).classList.contains('lb-stage')) dialog.close();
+    });
+
+    // Swipe left/right on touch screens.
+    let startX = 0;
+    let startY = 0;
+    dialog.addEventListener('pointerdown', (e) => {
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+    dialog.addEventListener('pointerup', (e) => {
+      const dx = e.clientX - startX;
+      if (e.pointerType !== 'mouse' && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(e.clientY - startY)) {
+        show(index + (dx < 0 ? 1 : -1));
+      }
+    });
+  }
+</script>
+
+<style>
+  .lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #05100cf2;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .lightbox::backdrop {
+    background: #05100c;
+  }
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+  .lb-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 64px 16px 8px;
+    touch-action: pan-y;
+  }
+  .lb-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+  }
+  .lb-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 12px 24px 20px;
+  }
+  .lb-caption {
+    color: var(--text-muted);
+  }
+  .lb-count {
+    color: var(--text-subtle);
+    white-space: nowrap;
+  }
+  .lb-btn {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #0a1512b3;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .lb-btn:hover {
+    color: var(--gold-hover);
+  }
+  .lb-close {
+    top: 12px;
+    right: 12px;
+  }
+  .lb-prev,
+  .lb-next {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lb-prev {
+    left: 12px;
+  }
+  .lb-next {
+    right: 12px;
+  }
+  @media (min-width: 1024px) {
+    .lb-stage {
+      padding: 72px 96px 8px;
+    }
+    .lb-bar {
+      padding: 16px 96px 24px;
+    }
+    .lb-prev {
+      left: 24px;
+    }
+    .lb-next {
+      right: 24px;
+    }
+    .lb-close {
+      top: 16px;
+      right: 24px;
+    }
+  }
+</style>

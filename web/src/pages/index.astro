@@ -1,0 +1,341 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Photo from '../components/Photo.astro';
+import Icon from '../components/Icon.astro';
+import StatList from '../components/StatList.astro';
+import {
+  altFor,
+  galleryPath,
+  getGalleries,
+  getHome,
+  getPhotoIndex,
+  getSettings,
+  instagramUrl,
+} from '../lib/content';
+import { businessSchema, personSchema, websiteSchema } from '../lib/seo';
+
+const [home, settings, galleries, photoIndex] = await Promise.all([
+  getHome(),
+  getSettings(),
+  getGalleries(),
+  getPhotoIndex(),
+]);
+
+const { hero } = home;
+const portfolioHref = galleries[0] ? galleryPath(galleries[0]) : '/portfolio/';
+const insta = instagramUrl(settings);
+
+// "Recent frames" are hand-picked on the home page. Until Tuur picks any, show
+// the first two photos of each gallery so the section is never empty.
+const recent = home.recentFrames?.length
+  ? home.recentFrames
+  : galleries.flatMap((g) => g.photos.slice(0, 2)).slice(0, 8);
+
+const site = Astro.site!;
+---
+
+<BaseLayout
+  seo={home.seo}
+  image={hero.image}
+  schema={[websiteSchema(settings, site), personSchema(settings, site), businessSchema(settings, site)]}
+>
+  <section class="hero">
+    <Photo
+      class="hero-photo"
+      photo={hero.image}
+      alt={altFor(hero.image, `${settings.photographerName} — sports photography`, photoIndex)}
+      widths={[640, 960, 1280, 1600, 2000, 2560]}
+      sizes="100vw"
+      priority
+      iconSize={18}
+    />
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
+        <h1 class="hero-title">
+          {
+            hero.headline.split('\n').map((line, i, all) => (
+              <>
+                {line}
+                {i < all.length - 1 && <br />}
+              </>
+            ))
+          }
+        </h1>
+        {hero.intro && <p class="hero-intro">{hero.intro}</p>}
+        <div class="btn-row">
+          <a class="btn btn--primary" href={portfolioHref}>
+            {hero.primaryCtaLabel || 'View portfolio'}
+            <Icon name="arrow-right" size={18} stroke={2} />
+          </a>
+          <a class="btn btn--secondary" href="/contact/">{hero.secondaryCtaLabel || 'Get in touch'}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {
+    galleries.length > 0 && (
+      <section class="section">
+        <div class="container stack gap-lg">
+          <SectionHeading>{home.sportsTitle || 'Portfolio'}</SectionHeading>
+          <div class="grid sports" style="--gap-lg: 16px 24px">
+            {galleries.map((g) => {
+              const cover = g.cover?.asset || g.cover?.placeholder ? g.cover : g.photos[0];
+              return (
+                <a class="sport-card" href={galleryPath(g)}>
+                  <Photo
+                    photo={cover}
+                    alt={altFor(cover, `${g.title} photography`, photoIndex)}
+                    aspect={4 / 5}
+                    widths={[320, 480, 640, 800]}
+                    sizes="(min-width: 1024px) 25vw, 50vw"
+                    iconSize={28}
+                  />
+                  <div class="sport-meta">
+                    <div class="stack gap-xs">
+                      <span class="sport-title">{g.title}</span>
+                      {g.tagline && <span class="mono subtle">{g.tagline}</span>}
+                    </div>
+                    <Icon name="arrow-right" class="gold-icon" />
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    recent.length > 0 && (
+      <section class="section section--alt">
+        <div class="container stack gap-lg">
+          <SectionHeading>
+            {home.recentTitle || 'Recent frames'}
+            <a slot="action" class="btn btn--secondary" href={portfolioHref}>
+              {home.recentCtaLabel || 'Full portfolio'}
+              <Icon name="arrow-right" size={18} stroke={2} />
+            </a>
+          </SectionHeading>
+          <div class="grid">
+            {recent.map((p) => {
+              const info = p.asset?._id ? photoIndex.get(p.asset._id) : undefined;
+              const img = (
+                <Photo
+                  photo={p}
+                  alt={altFor(p, 'Sports photo by Tuur Van Eynde', photoIndex)}
+                  aspect={3 / 2}
+                  widths={[320, 480, 640, 960]}
+                  sizes="(min-width: 1024px) 25vw, 50vw"
+                />
+              );
+              return info ? (
+                <a class="frame-link" href={galleryPath(info.gallery)}>
+                  {img}
+                </a>
+              ) : (
+                img
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    settings.stats.length > 0 && (
+      <section class="section">
+        <div class="container stack gap-lg">
+          <SectionHeading>
+            {home.statsTitle || 'Where I’ve stood'}
+            <a slot="action" class="btn btn--secondary" href="/experience/">
+              {home.statsCtaLabel || 'See experience'}
+              <Icon name="arrow-right" size={18} stroke={2} />
+            </a>
+          </SectionHeading>
+          <StatList stats={settings.stats} />
+        </div>
+      </section>
+    )
+  }
+
+  {
+    insta && (
+      <section class="section section--ruled insta">
+        <div class="container stack gap-lg">
+          <SectionHeading>
+            {home.instagramTitle || 'Follow me on Instagram'}
+            <a slot="action" class="btn btn--primary" href={insta} rel="me noopener" target="_blank">
+              {home.instagramCtaLabel || `Follow @${settings.instagramHandle}`}
+              <Icon name="arrow-right" size={18} stroke={2} />
+            </a>
+          </SectionHeading>
+          {home.instagramPosts && home.instagramPosts.length > 0 && (
+            <div class="grid">
+              {home.instagramPosts.map((post, i) => (
+                <a href={post.url || insta} rel="noopener" target="_blank" aria-label={`Instagram post ${i + 1}`}>
+                  <Photo
+                    photo={post.image}
+                    alt={altFor(post.image, `Instagram post ${i + 1}`, photoIndex)}
+                    aspect={1}
+                    widths={[320, 480, 640]}
+                    sizes="(min-width: 1024px) 25vw, 50vw"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .gap-lg {
+    gap: 32px;
+  }
+  .gap-xs {
+    gap: 4px;
+  }
+  @media (min-width: 1024px) {
+    .gap-lg {
+      gap: 48px;
+    }
+  }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: min(680px, 88svh);
+    isolation: isolate;
+  }
+  .hero :global(.hero-photo) {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto !important;
+    z-index: -2;
+  }
+  .hero :global(.hero-photo .placeholder) {
+    inset: 32px 24px auto auto;
+    flex-direction: row;
+  }
+  .hero-shade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(0deg, #05100cb8 0%, #05100c00 70%);
+  }
+  .hero-inner {
+    padding-bottom: 48px;
+  }
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 880px;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 11vw, 88px);
+    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .hero-intro {
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 28px;
+    color: #fff;
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      min-height: 780px;
+    }
+    .hero :global(.hero-photo .placeholder) {
+      inset: 40px 64px auto auto;
+    }
+    .hero-shade {
+      background: linear-gradient(90deg, #05100cb8 0%, #05100c00 62%);
+    }
+    .hero-inner {
+      padding-bottom: 96px;
+    }
+    .hero-copy {
+      gap: 32px;
+    }
+    .hero-title {
+      line-height: 80px;
+    }
+    .hero-intro {
+      font-size: 20px;
+      line-height: 30px;
+      font-weight: 500;
+    }
+  }
+
+  /* Sports */
+  .sport-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--text);
+  }
+  .sport-card :global(img) {
+    transition: transform 0.4s ease;
+  }
+  .sport-card:hover :global(img) {
+    transform: scale(1.03);
+  }
+  .sport-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .sport-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 700;
+  }
+  .sport-card :global(.gold-icon) {
+    color: var(--gold-text);
+  }
+  @media (min-width: 1024px) {
+    .sport-title {
+      font-size: 24px;
+      line-height: 30px;
+    }
+  }
+
+  .frame-link {
+    display: block;
+  }
+  .frame-link:hover :global(img) {
+    opacity: 0.85;
+  }
+
+  .insta {
+    padding-bottom: 96px;
+  }
+  @media (min-width: 1024px) {
+    .insta {
+      padding-bottom: 128px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sport-card :global(img) {
+      transition: none;
+    }
+  }
+</style>

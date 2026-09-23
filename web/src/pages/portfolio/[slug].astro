@@ -1,0 +1,230 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Photo from '../../components/Photo.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import { altFor, galleryPath, getGalleries, getSettings } from '../../lib/content';
+import { hasImage, imageSrcset, imageUrl } from '../../lib/sanity';
+import { gallerySchema } from '../../lib/seo';
+import type { Gallery, Photo as PhotoType } from '../../lib/types';
+
+export const getStaticPaths = (async () => {
+  const galleries = await getGalleries();
+  return galleries.map((gallery) => ({ params: { slug: gallery.slug }, props: { gallery } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  gallery: Gallery;
+}
+
+const { gallery } = Astro.props;
+const [settings, galleries] = await Promise.all([getSettings(), getGalleries()]);
+const [featured, ...rest] = gallery.photos;
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+
+const altOf = (p: PhotoType, i: number) =>
+  altFor(p, `${gallery.title} photo ${i + 1} by ${settings.photographerName}`);
+
+// Attributes for the lightbox link around each thumbnail: full, uncropped image.
+const lightbox = (p: PhotoType, i: number) =>
+  hasImage(p)
+    ? {
+        href: imageUrl(p, 2400),
+        'data-lightbox': '',
+        'data-srcset': imageSrcset(p, [960, 1600, 2400, 3000]),
+        'data-alt': altOf(p, i),
+        'data-caption': p.caption ?? '',
+      }
+    : {};
+
+const description =
+  gallery.intro ||
+  `${gallery.title} photography by ${settings.photographerName}, sports photographer from ${settings.location}.`;
+---
+
+<BaseLayout
+  seo={gallery.seo}
+  title={`${gallery.title} photography`}
+  description={description}
+  image={gallery.cover?.asset ? gallery.cover : featured}
+  schema={[gallerySchema(gallery, settings, Astro.site!, pageUrl)]}
+>
+  <section class="head">
+    <div class="container stack gap">
+      <SectionHeading as="h1">
+        {gallery.title}
+        <span slot="action" class="mono subtle">{gallery.photos.length} PHOTOS</span>
+      </SectionHeading>
+      {gallery.intro && <p class="lead intro">{gallery.intro}</p>}
+      {
+        galleries.length > 1 && (
+          <nav class="chips" aria-label="Choose a sport">
+            {galleries.map((g) => (
+              <a class="chip" href={galleryPath(g)} aria-current={g.slug === gallery.slug ? 'page' : undefined}>
+                {g.title}
+                <span class="mono">{g.photos.length}</span>
+              </a>
+            ))}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+
+  {
+    featured && (
+      <section class="container">
+        <a class="featured" {...lightbox(featured, 0)}>
+          <Photo
+            photo={featured}
+            alt={altOf(featured, 0)}
+            aspect={16 / 9}
+            widths={[640, 960, 1280, 1600, 2000, 2560]}
+            sizes="(min-width: 1440px) 1312px, 100vw"
+            priority
+          >
+            <div class="featured-bar">
+              <span class="small">{featured.caption}</span>
+              <span class="mono mono--caps">© {settings.siteTitle}</span>
+            </div>
+          </Photo>
+        </a>
+      </section>
+    )
+  }
+
+  {
+    rest.length > 0 && (
+      <section class="container grid-section">
+        <ul class="grid" style="--cols: 2; --cols-lg: 3; --gap: 12px; --gap-lg: 16px">
+          {rest.map((p, i) => (
+            <li>
+              <a class="thumb" {...lightbox(p, i + 1)}>
+                <Photo
+                  photo={p}
+                  alt={altOf(p, i + 1)}
+                  aspect={3 / 2}
+                  widths={[320, 480, 640, 960]}
+                  sizes="(min-width: 1024px) 33vw, 50vw"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {gallery.photos.length === 0 && <p class="container muted empty">No photos in this gallery yet.</p>}
+
+  <Lightbox />
+</BaseLayout>
+
+<style>
+  .gap {
+    gap: 24px;
+  }
+  .head {
+    padding: 48px 0 32px;
+  }
+  .intro {
+    max-width: 720px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 2px solid var(--line-strong);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .chip .mono {
+    color: var(--text-subtle);
+  }
+  .chip:hover {
+    color: var(--text);
+    border-color: var(--gold-hover);
+  }
+  .chip[aria-current='page'] {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg);
+  }
+  .chip[aria-current='page'] .mono {
+    color: inherit;
+    opacity: 0.75;
+  }
+
+  .featured,
+  .thumb {
+    display: block;
+    color: #fff;
+  }
+  .featured-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 16px;
+    background: linear-gradient(0deg, #05100cb8 0%, #05100c00 100%);
+  }
+  .thumb :global(img),
+  .featured :global(img) {
+    transition: opacity 0.2s;
+  }
+  .thumb:hover :global(img),
+  .featured:hover :global(img) {
+    opacity: 0.85;
+  }
+
+  .grid-section {
+    padding-top: 12px;
+    padding-bottom: 64px;
+  }
+  .grid-section ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .empty {
+    padding-bottom: 96px;
+  }
+
+  @media (min-width: 1024px) {
+    .gap {
+      gap: 32px;
+    }
+    .head {
+      padding: 96px 0 48px;
+    }
+    .chips {
+      gap: 12px;
+    }
+    .chip {
+      padding: 0 20px;
+    }
+    .featured-bar {
+      padding: 24px;
+    }
+    .grid-section {
+      padding-top: 16px;
+      padding-bottom: 128px;
+    }
+  }
+</style>

@@ -1,0 +1,305 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { galleryPath, instagramUrl, pagePath } from '../lib/content';
+import type { Gallery, SiteSettings } from '../lib/types';
+
+interface Props {
+  settings: SiteSettings;
+  galleries: Gallery[];
+}
+
+const { settings, galleries } = Astro.props;
+const current = Astro.url.pathname;
+const insta = instagramUrl(settings);
+
+const items = settings.navigation.map((item) => {
+  const href = pagePath(item.page, galleries);
+  const active =
+    item.page === 'home'
+      ? current === '/'
+      : item.page === 'portfolio'
+        ? current.startsWith('/portfolio/')
+        : current.startsWith(`/${item.page}/`);
+  return { ...item, href, active };
+});
+---
+
+<header class="site-header">
+  <div class="bar">
+    <Logo />
+
+    <nav class="desktop-nav" aria-label="Main">
+      <ul>
+        {
+          items.map((item) =>
+            item.page === 'portfolio' && galleries.length > 1 ? (
+              <li class="has-menu">
+                <a class="nav-link" href={item.href} aria-current={item.active ? 'page' : undefined}>
+                  {item.label}
+                  <Icon name="chevron-down" size={16} />
+                </a>
+                <ul class="submenu">
+                  {galleries.map((g) => (
+                    <li>
+                      <a href={galleryPath(g)} aria-current={current === galleryPath(g) ? 'page' : undefined}>
+                        {g.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ) : (
+              <li>
+                <a class="nav-link" href={item.href} aria-current={item.active ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ),
+          )
+        }
+        {
+          insta && (
+            <li>
+              <a class="nav-link icon-link" href={insta} rel="me noopener" target="_blank">
+                <Icon name="instagram" label={`${settings.siteTitle} on Instagram`} />
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </nav>
+
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+      <Icon name="menu" size={24} class="icon-open" />
+      <Icon name="x" size={24} class="icon-close" />
+    </button>
+  </div>
+
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <nav aria-label="Main">
+      {
+        items.map((item) => (
+          <a href={item.href} aria-current={item.active ? 'page' : undefined}>
+            {item.label}
+            <Icon name="arrow-right" size={20} />
+          </a>
+        ))
+      }
+    </nav>
+    {
+      galleries.length > 1 && (
+        <div class="mobile-galleries" aria-label="Portfolio">
+          {galleries.map((g) => (
+            <a class="mono upper" href={galleryPath(g)}>
+              {g.title}
+            </a>
+          ))}
+        </div>
+      )
+    }
+    {
+      insta && settings.instagramHandle && (
+        <a class="mobile-insta mono" href={insta} rel="me noopener" target="_blank">
+          <Icon name="instagram" size={18} />@{settings.instagramHandle.replace(/^@/, '')}
+        </a>
+      )
+    }
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  if (toggle && menu) {
+    const set = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      menu.hidden = !open;
+    };
+    toggle.addEventListener('click', () => set(menu.hidden));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) {
+        set(false);
+        toggle.focus();
+      }
+    });
+    matchMedia('(min-width: 900px)').addEventListener('change', (e) => e.matches && set(false));
+  }
+</script>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    padding: 0 16px 0 20px;
+    max-width: calc(var(--content-max) + 2 * var(--gutter));
+    margin-inline: auto;
+  }
+
+  /* Desktop */
+  .desktop-nav {
+    display: none;
+  }
+  .desktop-nav > ul {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding-top: 2px;
+    border-bottom: 2px solid transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
+    color: var(--text);
+  }
+  .nav-link[aria-current='page'] {
+    border-bottom-color: var(--gold);
+  }
+  .icon-link {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+  }
+  .has-menu {
+    position: relative;
+  }
+  .submenu {
+    position: absolute;
+    top: 100%;
+    left: -16px;
+    min-width: 200px;
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: 0 12px 32px #00000080;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  }
+  .has-menu:hover .submenu,
+  .has-menu:focus-within .submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+  .submenu a {
+    display: block;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .submenu a:hover,
+  .submenu a[aria-current='page'] {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  /* Mobile */
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .menu-toggle[aria-expanded='true'] :global(.icon-open),
+  .menu-toggle[aria-expanded='false'] :global(.icon-close) {
+    display: none;
+  }
+  .mobile-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 8px 24px 32px;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 32px #00000080;
+  }
+  .mobile-menu[hidden] {
+    display: none;
+  }
+  .mobile-menu nav {
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-menu nav a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .mobile-menu nav a[aria-current='page'] {
+    color: var(--gold-text);
+  }
+  .mobile-galleries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 20px;
+  }
+  .mobile-galleries a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--text-muted);
+  }
+  .mobile-insta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 12px;
+  }
+
+  @media (min-width: 900px) {
+    .bar {
+      height: 88px;
+      padding: 0 var(--gutter);
+    }
+    .desktop-nav {
+      display: block;
+    }
+    .menu-toggle,
+    .mobile-menu {
+      display: none;
+    }
+  }
+</style>

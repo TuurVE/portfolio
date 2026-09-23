@@ -1,0 +1,261 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Photo from '../components/Photo.astro';
+import Icon from '../components/Icon.astro';
+import { altFor, getExperience, getPhotoIndex } from '../lib/content';
+
+const [page, photoIndex] = await Promise.all([getExperience(), getPhotoIndex()]);
+const { featured } = page;
+
+// e.g. "10 matches · Home & away · Play-off 1". Uses the shared stat so the
+// number is only ever edited in one place.
+const featuredMeta = [
+  featured?.stat ? `${featured.stat.value} ${featured.stat.unit ?? ''}`.trim() : null,
+  featured?.meta,
+]
+  .filter(Boolean)
+  .join(' · ');
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<BaseLayout seo={page.seo} title={page.title} description={page.intro} image={featured?.image}>
+  <section class="section intro">
+    <div class="container stack gap-md">
+      <SectionHeading as="h1">{page.title}</SectionHeading>
+      {page.intro && <p class="lead intro-text">{page.intro}</p>}
+    </div>
+  </section>
+
+  {
+    featured && (
+      <section class="section">
+        <div class="container featured">
+          <figure class="featured-photo">
+            <Photo
+              photo={featured.image}
+              alt={altFor(featured.image, `${featured.title} — photographed by Tuur Van Eynde`, photoIndex)}
+              aspect={3 / 2}
+              widths={[480, 720, 960, 1280]}
+              sizes="(min-width: 1024px) 640px, 100vw"
+              priority
+            />
+            {featured.image?.caption && <figcaption class="caption">{featured.image.caption}</figcaption>}
+          </figure>
+          <div class="featured-copy">
+            <div class="stack gap-sm">
+              {featured.category && <p class="eyebrow eyebrow--green">{featured.category}</p>}
+              <h2 class="h2">{featured.title}</h2>
+              {featuredMeta && <p class="mono upper gold">{featuredMeta}</p>}
+            </div>
+            {featured.matches && featured.matches.length > 0 && (
+              <ol class="matches">
+                {featured.matches.map((m, i) => (
+                  <li>
+                    <span class="mono subtle">{pad(i + 1)}</span>
+                    <span class="small">{m}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    page.entries && page.entries.length > 0 && (
+      <section class="section section--alt">
+        <div class="container stack gap-lg">
+          {page.moreTitle && <SectionHeading>{page.moreTitle}</SectionHeading>}
+          <div class="grid cards" style="--cols: 1; --gap: 16px; --gap-lg: 24px">
+            {page.entries.map((e) => (
+              <article class="card">
+                <div class="stack gap-sm">
+                  {e.category && <p class="eyebrow eyebrow--green">{e.category}</p>}
+                  <h3 class="h3">{e.title}</h3>
+                </div>
+                {e.stat && (
+                  <div class="card-stat">
+                    <span class="stat-value">{e.stat.value}</span>
+                    {e.stat.unit && <span class="mono muted upper">{e.stat.unit}</span>}
+                  </div>
+                )}
+                {e.details && e.details.length > 0 && (
+                  <ul class="rows details">
+                    {e.details.map((d) => (
+                      <li class="small">{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section outro">
+    <div class="container stack gap-md">
+      {
+        page.photos && page.photos.length > 0 && (
+          <div class="grid" style="--cols: 1; --cols-lg: 3">
+            {page.photos.map((p) => (
+              <figure class="stack gap-sm">
+                <Photo
+                  photo={p}
+                  alt={altFor(p, 'Sports photo by Tuur Van Eynde', photoIndex)}
+                  aspect={3 / 2}
+                  widths={[480, 720, 960]}
+                  sizes="(min-width: 1024px) 33vw, 100vw"
+                />
+                {p.caption && <figcaption class="caption">{p.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        )
+      }
+      <div class="cta">
+        {page.ctaText && <p class="h3">{page.ctaText}</p>}
+        <a class="btn btn--primary" href="/contact/">
+          {page.ctaLabel || 'Get in touch'}
+          <Icon name="arrow-right" size={18} stroke={2} />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .gap-sm {
+    gap: 10px;
+  }
+  .gap-md {
+    gap: 24px;
+  }
+  .gap-lg {
+    gap: 32px;
+  }
+  figure {
+    margin: 0;
+  }
+  .gold {
+    color: var(--gold-text);
+  }
+  .intro {
+    padding-top: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .intro-text {
+    max-width: 640px;
+  }
+
+  .featured {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .featured-photo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .featured-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+  }
+  .matches {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .matches li {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 32px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .card-stat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .details {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .details li {
+    padding: 10px 0;
+  }
+
+  .outro {
+    padding-bottom: 96px;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 640px) {
+    .matches {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .cards {
+      --cols: 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .gap-lg {
+      gap: 48px;
+    }
+    .gap-md {
+      gap: 32px;
+    }
+    .intro {
+      padding-top: 96px;
+      padding-bottom: 64px;
+    }
+    .featured {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 64px;
+    }
+    .featured-photo {
+      width: 640px;
+      flex-shrink: 0;
+    }
+    .cards {
+      align-items: start;
+    }
+    .outro {
+      padding-bottom: 128px;
+    }
+  }
+</style>

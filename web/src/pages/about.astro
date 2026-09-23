@@ -1,0 +1,158 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Photo from '../components/Photo.astro';
+import Icon from '../components/Icon.astro';
+import RichText from '../components/RichText.astro';
+import { altFor, galleryPath, getAbout, getGalleries, getSettings } from '../lib/content';
+import { personSchema } from '../lib/seo';
+
+const [about, settings, galleries] = await Promise.all([getAbout(), getSettings(), getGalleries()]);
+const portfolioHref = galleries[0] ? galleryPath(galleries[0]) : '/portfolio/';
+const site = Astro.site!;
+const url = new URL(Astro.url.pathname, site).href;
+---
+
+<BaseLayout
+  seo={about.seo}
+  title={about.title}
+  description={about.lead}
+  image={about.portrait}
+  schema={[{ '@type': 'ProfilePage', url, mainEntity: personSchema(settings, site) }]}
+>
+  <section class="section">
+    <div class="container about">
+      <figure class="portrait">
+        <Photo
+          photo={about.portrait}
+          alt={altFor(about.portrait, `Portrait of ${settings.photographerName}`)}
+          aspect={4 / 5}
+          widths={[400, 600, 800, 1120]}
+          sizes="(min-width: 1024px) 560px, 100vw"
+          priority
+        />
+        {about.portrait?.caption && <figcaption class="caption">{about.portrait.caption}</figcaption>}
+      </figure>
+
+      <div class="copy">
+        <SectionHeading as="h1">{about.title}</SectionHeading>
+        <div class="text">
+          {about.lead && <p class="lead-strong">{about.lead}</p>}
+          <RichText value={about.body} class="body-lg" />
+        </div>
+
+        {
+          about.facts && about.facts.length > 0 && (
+            <dl class="rows facts">
+              {about.facts.map((f) => (
+                <div class="fact">
+                  <dt class="mono subtle upper">{f.label}</dt>
+                  <dd class="small">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+
+        <div class="btn-row">
+          <a class="btn btn--primary" href={portfolioHref}>
+            {about.primaryCtaLabel || 'View my portfolio'}
+            <Icon name="arrow-right" size={18} stroke={2} />
+          </a>
+          <a class="btn btn--secondary" href="/contact/">{about.secondaryCtaLabel || 'Contact me'}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {
+    about.goalText && (
+      <section class="section section--alt">
+        <div class="container">
+          <blockquote class="goal">
+            {about.goalEyebrow && <p class="eyebrow">{about.goalEyebrow}</p>}
+            <p class="goal-text">{about.goalText}</p>
+          </blockquote>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .about {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .portrait {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .copy {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 600px;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .lead-strong {
+    font-size: 20px;
+    line-height: 30px;
+    font-weight: 500;
+  }
+  .fact {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    padding: 14px 0;
+  }
+  .fact dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+  .goal {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1000px;
+    padding-left: 32px;
+    border-left: 3px solid var(--gold);
+  }
+  .goal-text {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 34px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  @media (min-width: 1024px) {
+    .about {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 96px;
+    }
+    .portrait {
+      width: 560px;
+      flex-shrink: 0;
+    }
+    .copy {
+      flex: 1;
+      padding-top: 24px;
+    }
+    .goal-text {
+      font-size: 40px;
+      line-height: 46px;
+    }
+  }
+</style>

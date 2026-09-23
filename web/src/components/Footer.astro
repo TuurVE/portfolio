@@ -1,0 +1,157 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { galleryPath, instagramUrl, pagePath } from '../lib/content';
+import type { Gallery, SiteSettings } from '../lib/types';
+
+interface Props {
+  settings: SiteSettings;
+  galleries: Gallery[];
+}
+
+const { settings, galleries } = Astro.props;
+const insta = instagramUrl(settings);
+const handle = settings.instagramHandle?.replace(/^@/, '');
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="top">
+      <div class="brand">
+        <div class="bar" aria-hidden="true"></div>
+        <Logo size={20} />
+        {settings.description && <p class="muted">{settings.description}</p>}
+      </div>
+
+      <div class="cols">
+        <div class="col">
+          <h2 class="col-title">Pages</h2>
+          {settings.navigation.map((item) => <a href={pagePath(item.page, galleries)}>{item.label}</a>)}
+        </div>
+        {
+          galleries.length > 0 && (
+            <div class="col">
+              <h2 class="col-title">Portfolio</h2>
+              {galleries.map((g) => (
+                <a href={galleryPath(g)}>{g.title}</a>
+              ))}
+            </div>
+          )
+        }
+        {
+          (insta || settings.email) && (
+            <div class="col">
+              <h2 class="col-title">Follow</h2>
+              {insta && (
+                <a class="gold" href={insta} rel="me noopener" target="_blank">
+                  <Icon name="instagram" size={18} />@{handle}
+                </a>
+              )}
+              {settings.email && (
+                <a class="gold" href={`mailto:${settings.email}`}>
+                  <Icon name="mail" size={18} />
+                  {settings.email}
+                </a>
+              )}
+            </div>
+          )
+        }
+      </div>
+    </div>
+
+    <div class="bottom mono mono--caps">
+      <span>© {year} {settings.siteTitle}</span>
+      <span>{settings.location}</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-footer);
+    padding: 48px 0 32px;
+  }
+  .site-footer .container {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .brand p {
+    max-width: 340px;
+  }
+  .bar {
+    width: 48px;
+    height: 6px;
+    background: var(--gold);
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px 24px;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .col-title {
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .col a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+  .col a:hover {
+    color: var(--text);
+  }
+  .col a.gold {
+    color: var(--gold-text);
+  }
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--text-subtle);
+  }
+
+  @media (min-width: 1024px) {
+    .site-footer {
+      padding: 64px 0 40px;
+    }
+    .top {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 48px;
+    }
+    .cols {
+      display: flex;
+      gap: 96px;
+    }
+  }
+</style>
