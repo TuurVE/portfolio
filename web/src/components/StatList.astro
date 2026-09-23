@@ -1,0 +1,37 @@
+---
+// The shared headline numbers from Site settings → Stats.
+import type { Stat } from '../lib/types';
+
+interface Props {
+  stats: Stat[];
+}
+const { stats } = Astro.props;
+---
+
+<dl class="grid stats" style="--gap: 24px; --gap-lg: 24px">
+  {
+    stats.map((s) => (
+      <div class="stat">
+        <dt class="mono subtle upper">{s.kicker}</dt>
+        <dd class="stat-value">{s.value}</dd>
+        <dd class="muted">{s.label}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  .stats {
+    margin: 0;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line-strong);
+  }
+  dd {
+    margin: 0;
+  }
+</style>

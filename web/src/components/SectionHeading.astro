@@ -1,0 +1,37 @@
+---
+// Heading + short gold rule, with an optional action (button) on the right.
+interface Props {
+  as?: 'h1' | 'h2';
+  class?: string;
+  id?: string;
+}
+const { as: Tag = 'h2', class: className, id } = Astro.props;
+---
+
+<div class:list={['section-heading', className]}>
+  <div class="title">
+    <Tag class={Tag === 'h1' ? 'h1' : 'h2'} id={id}><slot /></Tag>
+    <div class="rule" aria-hidden="true"></div>
+  </div>
+  {Astro.slots.has('action') && <div class="action"><slot name="action" /></div>}
+</div>
+
+<style>
+  .section-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+  .title {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .rule {
+    width: 48px;
+    height: 3px;
+    background: var(--gold);
+  }
+</style>

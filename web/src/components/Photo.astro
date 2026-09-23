@@ -1,0 +1,82 @@
+---
+// Responsive image from the Sanity CDN. Crops to `aspect` around the editor's
+// hotspot when given; otherwise keeps the photo's own ratio. Without an asset
+// (demo content) it renders the design's placeholder frame instead.
+import type { Photo } from '../lib/types';
+import { croppedSize, hasImage, imageSrcset, imageUrl } from '../lib/sanity';
+import Icon from './Icon.astro';
+
+interface Props {
+  photo?: Photo | null;
+  alt: string;
+  /** Width / height, e.g. 3/2. */
+  aspect?: number;
+  widths?: number[];
+  sizes?: string;
+  priority?: boolean;
+  class?: string;
+  iconSize?: number;
+}
+
+const {
+  photo,
+  alt,
+  aspect,
+  widths = [480, 720, 960, 1280, 1600, 2000],
+  sizes = '100vw',
+  priority = false,
+  class: className,
+  iconSize = 24,
+} = Astro.props;
+
+const real = hasImage(photo);
+const size = real ? croppedSize(photo) : null;
+const ratio = aspect ?? (size ? size.width / size.height : 3 / 2);
+const baseWidth = 1200;
+const src = real ? imageUrl(photo, baseWidth, { aspect }) : '';
+const srcset = real ? imageSrcset(photo, widths, aspect) : '';
+const lqip = real ? photo.asset.metadata?.lqip : undefined;
+---
+
+<div class:list={['photo', className]} style={`aspect-ratio: ${ratio}`}>
+  {
+    real ? (
+      <img
+        src={src}
+        srcset={srcset}
+        sizes={sizes}
+        width={baseWidth}
+        height={Math.round(baseWidth / ratio)}
+        alt={alt}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchpriority={priority ? 'high' : undefined}
+        style={lqip ? `background-image: url(${lqip})` : undefined}
+      />
+    ) : (
+      <div class="placeholder" role="img" aria-label={alt}>
+        <Icon name="image" size={iconSize} />
+        {photo?.placeholder && <span class="mono upper">{photo.placeholder}</span>}
+      </div>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-subtle);
+    text-align: center;
+    padding: 8px;
+  }
+  .placeholder span {
+    color: var(--text-muted);
+  }
+</style>

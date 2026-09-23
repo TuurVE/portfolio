@@ -1,0 +1,8 @@
+---
+// /portfolio/ has no page of its own in the design: send visitors to the
+// first gallery. Astro writes a static redirect page (meta refresh + canonical).
+import { galleryPath, getGalleries } from '../../lib/content';
+
+const [first] = await getGalleries();
+return Astro.redirect(first ? galleryPath(first) : '/');
+---

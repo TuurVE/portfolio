@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<BaseLayout title="Page not found" noIndex>
+  <section class="section">
+    <div class="container stack" style="gap: 32px; padding-block: 64px">
+      <SectionHeading as="h1">Out of frame</SectionHeading>
+      <p class="lead">This page doesn’t exist (anymore). Try the portfolio instead.</p>
+      <div class="btn-row">
+        <a class="btn btn--primary" href="/">Back home <Icon name="arrow-right" size={18} stroke={2} /></a>
+        <a class="btn btn--secondary" href="/portfolio/">Portfolio</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

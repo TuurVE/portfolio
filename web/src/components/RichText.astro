@@ -1,0 +1,39 @@
+---
+// Renders Portable Text (Sanity's rich text) to HTML.
+import { toHTML, escapeHTML } from '@portabletext/to-html';
+import type { PortableTextBlock } from '@portabletext/types';
+
+interface Props {
+  value?: PortableTextBlock[];
+  class?: string;
+}
+const { value, class: className } = Astro.props;
+
+const html = value?.length
+  ? toHTML(value, {
+      components: {
+        marks: {
+          link: ({ children, value }) => {
+            const href = escapeHTML(value?.href ?? '#');
+            const external = /^https?:\/\//.test(value?.href ?? '');
+            return `<a href="${href}"${external ? ' rel="noopener" target="_blank"' : ''}>${children}</a>`;
+          },
+        },
+      },
+    })
+  : '';
+---
+
+{html && <div class:list={['rich-text', className]} set:html={html} />}
+
+<style>
+  .rich-text {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .rich-text :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>
