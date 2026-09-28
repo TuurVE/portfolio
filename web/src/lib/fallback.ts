@@ -70,7 +70,6 @@ export const fallbackGalleries: Gallery[] = [
 
 export const fallbackHome: HomePage = {
   hero: {
-    eyebrow: 'Sports photography — Belgium',
     headline: 'High-speed action.\nRaw emotion.\nDefining moments.',
     intro: 'I specialise in dynamic sports photography that freezes time and tells the story behind every play.',
     image: ph('HERO · DSC04468'),

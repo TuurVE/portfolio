@@ -53,7 +53,6 @@ const site = Astro.site!;
     <div class="hero-shade" aria-hidden="true"></div>
     <div class="container hero-inner">
       <div class="hero-copy">
-        {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
         <h1 class="hero-title">
           {
             hero.headline.split('\n').map((line, i, all) => (

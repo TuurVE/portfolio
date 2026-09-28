@@ -74,7 +74,6 @@ export interface Gallery {
 
 export interface HomePage {
   hero: {
-    eyebrow?: string;
     headline: string;
     intro?: string;
     image?: Photo;

@@ -19,7 +19,6 @@ export const homePage = defineType({
       type: 'object',
       group: 'hero',
       fields: [
-        defineField({name: 'eyebrow', title: 'Small line above the title', type: 'string'}),
         defineField({
           name: 'headline',
           title: 'Title',
