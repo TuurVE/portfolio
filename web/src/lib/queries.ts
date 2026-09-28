@@ -18,6 +18,7 @@ export const galleriesQuery = `*[_type == "gallery" && defined(slug.current)] | 
   "slug": slug.current,
   tagline,
   intro,
+  shownOnHomepage,
   cover${IMAGE},
   "photos": coalesce(photos[]${IMAGE}, []),
   ${SEO}

@@ -70,6 +70,7 @@ export interface Gallery {
   cover?: Photo;
   photos: Photo[];
   seo?: Seo;
+  shownOnHomepage?: boolean;
 }
 
 export interface HomePage {

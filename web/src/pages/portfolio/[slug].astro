@@ -97,14 +97,13 @@ const description =
   {
     rest.length > 0 && (
       <section class="container grid-section">
-        <ul class="grid" style="--cols: 2; --cols-lg: 3; --gap: 12px; --gap-lg: 16px">
+        <ul class="masonry">
           {rest.map((p, i) => (
             <li>
               <a class="thumb" {...lightbox(p, i + 1)}>
                 <Photo
                   photo={p}
                   alt={altOf(p, i + 1)}
-                  aspect={3 / 2}
                   widths={[320, 480, 640, 960]}
                   sizes="(min-width: 1024px) 33vw, 50vw"
                 />
@@ -202,6 +201,14 @@ const description =
     padding: 0;
     list-style: none;
   }
+  .masonry {
+    columns: 2;
+    column-gap: 12px;
+  }
+  .masonry li {
+    break-inside: avoid;
+    margin-bottom: 12px;
+  }
   .empty {
     padding-bottom: 96px;
   }
@@ -225,6 +232,13 @@ const description =
     .grid-section {
       padding-top: 16px;
       padding-bottom: 128px;
+    }
+    .masonry {
+      columns: 3;
+      column-gap: 16px;
+    }
+    .masonry li {
+      margin-bottom: 16px;
     }
   }
 </style>

@@ -69,25 +69,21 @@ const pad = (n: number) => String(n).padStart(2, '0');
       <section class="section section--alt">
         <div class="container stack gap-lg">
           {page.moreTitle && <SectionHeading>{page.moreTitle}</SectionHeading>}
-          <div class="grid cards" style="--cols: 1; --gap: 16px; --gap-lg: 24px">
+          <div class="grid cards">
             {page.entries.map((e) => (
               <article class="card">
-                <div class="stack gap-sm">
-                  {e.category && <p class="eyebrow eyebrow--green">{e.category}</p>}
-                  <h3 class="h3">{e.title}</h3>
+                <div class="card-top">
+                  {e.category && <p class="card-kicker">{e.category}</p>}
+                  <h3 class="card-title">{e.title}</h3>
                 </div>
                 {e.stat && (
                   <div class="card-stat">
                     <span class="stat-value">{e.stat.value}</span>
-                    {e.stat.unit && <span class="mono muted upper">{e.stat.unit}</span>}
+                    {e.stat.unit && <span class="card-unit">{e.stat.unit}</span>}
                   </div>
                 )}
                 {e.details && e.details.length > 0 && (
-                  <ul class="rows details">
-                    {e.details.map((d) => (
-                      <li class="small">{d}</li>
-                    ))}
-                  </ul>
+                  <p class="card-foot small">{e.details.join(' · ')}</p>
                 )}
               </article>
             ))}
@@ -186,28 +182,64 @@ const pad = (n: number) => String(n).padStart(2, '0');
     border-bottom: 1px solid var(--line);
   }
 
+  .cards {
+    --cols: 1;
+    --gap: 16px;
+    --gap-lg: 20px;
+    align-items: stretch;
+  }
   .card {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 32px;
-    background: var(--card);
+    gap: 22px;
+    height: 100%;
+    padding: 22px 22px 20px;
+    background: var(--bg);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 12px;
+  }
+  .card-top {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-kicker {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
   .card-stat {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
-  .details {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .card .stat-value {
+    font-size: 44px;
   }
-  .details li {
-    padding: 10px 0;
+  .card-unit {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .card-foot {
+    margin-top: auto;
+    min-height: 60px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
   }
 
   .outro {
@@ -252,7 +284,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
       flex-shrink: 0;
     }
     .cards {
-      align-items: start;
+      --cols-lg: 4;
+    }
+    .card .stat-value {
+      font-size: 52px;
     }
     .outro {
       padding-bottom: 128px;

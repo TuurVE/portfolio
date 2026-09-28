@@ -69,6 +69,7 @@ export const gallery = defineType({
       options: {layout: 'grid'},
     }),
     defineField({name: 'seo', title: 'SEO & sharing', type: 'seo', group: 'seo'}),
+    defineField({name: 'shownOnHomepage', title: 'Show on home page', type: 'boolean', group: 'details', initialValue: true}),
   ],
   orderings: [{title: 'Position', name: 'order', by: [{field: 'order', direction: 'asc'}]}],
   preview: {

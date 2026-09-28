@@ -57,6 +57,7 @@ const gallery = (slug: keyof typeof ids, title: string, tagline: string, cover: 
   title,
   slug,
   tagline,
+  shownOnHomepage: true,
   cover: ph(cover),
   photos: ids[slug].map((id) => ph(id, 'Caption — who, what, when')),
 });

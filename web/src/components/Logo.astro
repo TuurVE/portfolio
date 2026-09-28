@@ -3,12 +3,11 @@ interface Props {
   size?: number;
   label?: string;
 }
-const { size = 18, label = 'TVE.photo home' } = Astro.props;
+const { size = 64, label = 'TVE.photo home' } = Astro.props;
 ---
 
 <a href="/" class="logo" aria-label={label} style={`--logo-size: ${size}px`}>
-  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-  <span class="word">TVE<span>.PHOTO</span></span>
+ <img src="/logotve.svg" alt="TVE.photo" width={size} height={size} />
 </a>
 
 <style>
@@ -16,7 +15,6 @@ const { size = 18, label = 'TVE.photo home' } = Astro.props;
     position: relative;
     display: inline-flex;
     align-items: center;
-    padding: 10px 14px;
   }
   .corner {
     position: absolute;

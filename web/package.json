@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "tunnel": "ngrok http 4321",
     "build": "astro build",
     "preview": "wrangler dev",
     "check": "astro check",

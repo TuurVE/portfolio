@@ -23,6 +23,8 @@ const [home, settings, galleries, photoIndex] = await Promise.all([
 ]);
 
 const { hero } = home;
+// Unset means show: the Studio field defaults to true, and older documents never stored it.
+const homepageGalleries = galleries.filter((g) => g.shownOnHomepage !== false);
 const portfolioHref = galleries[0] ? galleryPath(galleries[0]) : '/portfolio/';
 const insta = instagramUrl(settings);
 
@@ -76,12 +78,12 @@ const site = Astro.site!;
   </section>
 
   {
-    galleries.length > 0 && (
+    homepageGalleries.length > 0 && (
       <section class="section">
         <div class="container stack gap-lg">
           <SectionHeading>{home.sportsTitle || 'Portfolio'}</SectionHeading>
           <div class="grid sports" style="--gap-lg: 16px 24px">
-            {galleries.map((g) => {
+            {homepageGalleries.map((g) => {
               const cover = g.cover?.asset || g.cover?.placeholder ? g.cover : g.photos[0];
               return (
                 <a class="sport-card" href={galleryPath(g)}>

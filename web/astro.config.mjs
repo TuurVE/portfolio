@@ -10,6 +10,11 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
+  vite: {
+    server: {
+      allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev', '.ngrok.app'],
+    },
+  },
   integrations: [
     sitemap({
       // /portfolio/ only redirects to the first gallery; keep it out of the sitemap.
